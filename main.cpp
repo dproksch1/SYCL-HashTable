@@ -13,7 +13,7 @@ int main()
 
     std::cout << "expected: 17550  ";
     syclhash_print_one(q, hashtable, 22);
-    std::cout << v << ", expected: 13  ";
+    std::cout << "expected: 13  ";
     syclhash_print_one(q, hashtable, 25);
     std::cout << "expected: -6633  ";
     syclhash_print_one(q, hashtable, 29);
