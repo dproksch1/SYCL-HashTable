@@ -11,10 +11,10 @@ int main()
     std::vector<sycl_hashtable::KV<double>> inserts = {{22, 175500.245}, {25,13.2334}, {29,-6633.153}};
     syclhash_insert(q, hashtable, inserts);
 
-    std::cout << "expected: 17550  ";
+    std::cout << "expected: 17550.245  ";
     syclhash_print_one(q, hashtable, 22);
-    std::cout << "expected: 13  ";
+    std::cout << "expected: 13.2334  ";
     syclhash_print_one(q, hashtable, 25);
-    std::cout << "expected: -6633  ";
+    std::cout << "expected: -6633.153  ";
     syclhash_print_one(q, hashtable, 29);
 }
