@@ -7,7 +7,8 @@ int main()
 {
     std::cout << "small test run" << std::endl;
     cl::sycl::queue q;
-    sycl_hashtable::KV<double> *hashtable = cl::sycl::malloc_shared<sycl_hashtable::KV<double>>(CAPACITY, q);
+    // sycl_hashtable::KV<double> *hashtable = cl::sycl::malloc_shared<sycl_hashtable::KV<double>>(CAPACITY, q);
+    auto hashtable = syclhash_alloc_table<double>(q);
     std::vector<sycl_hashtable::KV<double>> inserts = {{22, 175500.245}, {25,13.2334}, {29,-6633.153}};
     syclhash_insert(q, hashtable, inserts);
     std::cout << "expected: 17550.245  ";
@@ -22,5 +23,5 @@ int main()
     syclhash_print_one(q, hashtable, 22); std::cout << " ";
     syclhash_print_one(q, hashtable, 25); std::cout << " ";
     syclhash_print_one(q, hashtable, 29); std::cout << "\n";
-    cl::sycl::free(hashtable, q);
+    syclhash_free_table(q, hashtable);
 }

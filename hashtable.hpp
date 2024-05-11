@@ -5,7 +5,7 @@
 #include "stdio.h"
 
 #define CAPACITY 400
-#define EMPTY_SENTINEL -229384
+#define EMPTY_SENTINEL -123456789
 #define MAX_INSERT_CAP 100
 #define MAX_LOAD_CAP 100
 
@@ -89,6 +89,16 @@ namespace sycl_hashtable {
             counter++;
         }
     }
+}
+
+template <typename T>
+sycl_hashtable::KV<T>* syclhash_alloc_table(cl::sycl::queue& q) {
+    return cl::sycl::malloc_shared<sycl_hashtable::KV<T>>(CAPACITY, q);
+}
+
+template <typename T>
+void syclhash_free_table(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable) {
+    cl::sycl::free(hashtable, q);
 }
 
 template <typename T>
