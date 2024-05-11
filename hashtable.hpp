@@ -7,6 +7,7 @@
 #define CAPACITY 400
 #define EMPTY_SENTINEL -229384
 #define MAX_INSERT_CAP 100
+#define MAX_LOAD_CAP 100
 
 namespace sycl_hashtable {
 
@@ -106,25 +107,47 @@ void syclhash_insert(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable, std::
 template <typename T>
 void syclhash_print_one(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable, int key) {
     q.parallel_for(cl::sycl::range<1>(1), [=](cl::sycl::id<1> idx) {
-        T v = sycl_hashtable::load(hashtable, key);
-        printf("load(d): %d\n", (int) v);
+        T v = sycl_hashtable::load<T>(hashtable, key);
+        printf("%d", (int) v);
     }).wait();
 }
 
-// template <typename T>
-// T syclhash_load_one(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable, int key) {
-//     T v[1];
-//     // cl::sycl::buffer<T,1> v_buf(&v[0], 1);
-//     printf("test??\n");
-//     q.submit([&](auto &cgh) {
-//         // cl::sycl::accessor v_acc(v_buf, cgh, cl::sycl::write_only, cl::sycl::no_init);
-//         q.parallel_for(cl::sycl::range<1>(1), [&](cl::sycl::id<1> idx) {
-//             printf("test??\n");
-//             // v_acc[0] = sycl_hashtable::load(hashtable, key);
-//         });
-//     }).wait();
-//     return v[0];
-// }
+template <typename T>
+T syclhash_load_one(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable, int key) {
+    T v[1];
+    {
+        cl::sycl::buffer<T,1> v_buf(&v[0], 1);
+        q.submit([&](auto &cgh) {
+            cl::sycl::accessor v_acc(v_buf, cgh, cl::sycl::write_only, cl::sycl::no_init);
+            cgh.parallel_for(cl::sycl::range<1>(1), [=](cl::sycl::id<1> idx) {
+                v_acc[0] = sycl_hashtable::load<T>(hashtable, key);
+            });
+        }).wait();
+    }
+    return v[0];
+}
+
+template <typename T>
+std::vector<T> syclhash_load(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable, std::vector<int> keys) {
+    T v_arr[MAX_LOAD_CAP];
+    int n = keys.size();
+    int keys_arr[MAX_LOAD_CAP];
+    if (n <= MAX_LOAD_CAP) {
+        std::copy(keys.begin(), keys.end(), keys_arr);
+    }
+    {
+        cl::sycl::buffer<T,1> v_buf(&v_arr[0], n);
+        cl::sycl::buffer<int,1> keys_buf(&keys_arr[0], n);
+        q.submit([&](auto &cgh) {
+            cl::sycl::accessor v_acc(v_buf, cgh, cl::sycl::write_only, cl::sycl::no_init);
+            cl::sycl::accessor keys_acc(keys_buf, cgh, cl::sycl::read_only);
+            cgh.parallel_for(cl::sycl::range<1>(n), [=](cl::sycl::id<1> idx) {
+                v_acc[idx] = sycl_hashtable::load<T>(hashtable, keys_acc[idx]);
+            });
+        }).wait();
+    }
+    return std::vector<T>(std::begin(v_arr), std::end(v_arr));
+}
 
 template <typename T>
 void syclhash_delete(cl::sycl::queue& q, sycl_hashtable::KV<T>* hashtable, std::vector<int> keys) {
