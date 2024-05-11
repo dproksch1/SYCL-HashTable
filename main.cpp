@@ -22,4 +22,5 @@ int main()
     syclhash_print_one(q, hashtable, 22); std::cout << " ";
     syclhash_print_one(q, hashtable, 25); std::cout << " ";
     syclhash_print_one(q, hashtable, 29); std::cout << "\n";
+    cl::sycl::free(hashtable, q);
 }
